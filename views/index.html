@@ -26,6 +26,7 @@
       storageBucket: "csproject609.appspot.com",
       messagingSenderId: "997724796380"
     };
+    // var DB;
     firebase.initializeApp(config);
     // var object = document.getElementById('posts');
     var db = firebase.firestore();
@@ -43,20 +44,55 @@
         titlePost.innerHTML = doc.data().title;
         let descPost = document.createElement("div");
         descPost.innerHTML = doc.data().desc;
-        // let LikePost=document.createElement("div");
+        let LikePost = document.createElement("div");
+        LikePost.setAttribute("class", "mdl-card__title");
+
+        let LikeIcon = document.createElement("i");
+        LikeIcon.setAttribute("class", "material-icons md-light");
+        LikeIcon.innerHTML = "favorite_border";
+        LikeIcon.style.color = "red";
+        let j = i;
+        LikeIcon.id = "Icons" + j;
+        LikeIcon.onclick = (event) => Test(event, j, doc);
+
+        let LikesNo = document.createElement("div");
+        LikesNo.id = "LikesShow" + j;
+        LikesNo.innerHTML = doc.data().likes;
+        LikePost.appendChild(LikesNo);
+        LikePost.appendChild(LikeIcon);
         let imgPost = document.createElement("img");
         imgPost.setAttribute("src", doc.data().photo);
         //TODO Add Like Button With a Div Tag
         post[i].appendChild(titlePost);
         post[i].appendChild(descPost);
         post[i].appendChild(imgPost);
-        console.log(post[i]);
+        post[i].appendChild(LikePost);
+        // console.log(post[i]);
         // allPosts.innerHTML += post;
         allPosts.append(post[i]);
         i++;
       });
 
     });
+    function Test(x, j, doc) {
+      document.getElementById("Icons" + j).innerHTML = "favorite";
+      document.getElementById("Icons" + j).onclick = "javascript:void(0)";
+      var Like = document.getElementById("LikesShow" + j).innerHTML;
+      Like++;
+      document.getElementById("LikesShow" + j).innerHTML = Like;
+      var Doc = doc._document.key.path.segments[6];
+      // console.log(doc.data());
+      let Data = doc.data();
+      Data.likes++;
+      db.collection("posts").doc(Doc).set(Data)
+        .then(function () {
+          // console.log("Document successfully written!");
+        })
+        .catch(function (error) {
+          // console.error("Error writing document: ", error);
+        });
+      // console.log(x, j);
+    }
   </script>
 
   <script type="text/javascript">
