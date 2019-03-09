@@ -27,6 +27,7 @@
       messagingSenderId: "997724796380"
     };
     // var DB;
+    var uid;
     firebase.initializeApp(config);
     // var object = document.getElementById('posts');
     var db = firebase.firestore();
@@ -49,15 +50,24 @@
 
         let LikeIcon = document.createElement("i");
         LikeIcon.setAttribute("class", "material-icons md-light");
-        LikeIcon.innerHTML = "favorite_border";
+        if (doc.data().likes.find((elt) => {
+          return uid === elt
+
+        }) !== undefined) {
+          LikeIcon.innerHTML = "favorite";
+
+
+        } else {
+          LikeIcon.innerHTML = "favorite_border";
+        }
         LikeIcon.style.color = "red";
         let j = i;
         LikeIcon.id = "Icons" + j;
-        LikeIcon.onclick = (event) => Test(event, j, doc);
+        // LikeIcon.onclick = (event) => Test(event, j, doc);
 
         let LikesNo = document.createElement("div");
         LikesNo.id = "LikesShow" + j;
-        LikesNo.innerHTML = doc.data().likes;
+        LikesNo.innerHTML = doc.data().likes.length;
         LikePost.appendChild(LikesNo);
         LikePost.appendChild(LikeIcon);
         let imgPost = document.createElement("img");
@@ -74,7 +84,7 @@
       });
 
     });
-    function Test(x, j, doc) {
+    function Test(j, doc, id) {
       document.getElementById("Icons" + j).innerHTML = "favorite";
       document.getElementById("Icons" + j).onclick = "javascript:void(0)";
       var Like = document.getElementById("LikesShow" + j).innerHTML;
@@ -83,7 +93,8 @@
       var Doc = doc._document.key.path.segments[6];
       // console.log(doc.data());
       let Data = doc.data();
-      Data.likes++;
+      Data.likes.push(id);
+      console.log(Data.likes)
       db.collection("posts").doc(Doc).set(Data)
         .then(function () {
           // console.log("Document successfully written!");
@@ -91,11 +102,7 @@
         .catch(function (error) {
           // console.error("Error writing document: ", error);
         });
-      // console.log(x, j);
     }
-  </script>
-
-  <script type="text/javascript">
 
     /**
      * Function called when clicking the Login/Logout button.
@@ -164,7 +171,7 @@
           var emailVerified = user.emailVerified;
           var photoURL = user.photoURL;
           var isAnonymous = user.isAnonymous;
-          var uid = user.uid;
+          uid = user.uid;
           var providerData = user.providerData;
           // [START_EXCLUDE]
           // document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
@@ -178,6 +185,45 @@
           document.getElementById('Pphoto').disabled = false;
           document.getElementById('PostButton').disabled = false;
           document.getElementById('PostButton').style.background = "orange";
+
+          for (let i = 0; document.getElementById("Icons" + i) !== null; i++) {
+            db.collection("posts").get().then((querySnapshot) => {
+              let j = 0;
+              querySnapshot.forEach((doc) => {
+                if (doc.data().likes.find((elt) => {
+                  return uid === elt
+                }) !== undefined) {
+                  document.getElementById("Icons" + j).innerHTML = "favorite";
+                } else {
+                  document.getElementById("Icons" + j).innerHTML = "favorite_border";
+                }
+                j++;
+              })
+            });
+
+
+
+            document.getElementById("Icons" + i).addEventListener("click", function (event) {
+              db.collection("posts").get().then((querySnapshot) => {
+                let j = 0;
+                querySnapshot.forEach((doc) => {
+
+                  if (j === Number(event.target.id.slice(5, event.target.id.length))) {
+                    if (doc.data().likes.find(function (elt) {
+                      return elt == uid
+                    }) === undefined) {
+                      Test(i, doc, uid);
+                    }
+
+                  }
+                  j++
+                })
+              });
+              //i
+              //Find What is clicked
+              // console.log(uid); //Store this in DB
+            })
+          }
 
         } else {
           //TODO Disable Form
@@ -215,7 +261,7 @@
       console.log([Ptitle, PDesc, Pphoto]);
       var pDate = new Date();
       var PDate = pDate.getTime();
-      var PLikes = 0;
+      var PLikes = [];
       db.collection("posts").add({
         data: pDate,
         desc: PDesc,
@@ -248,7 +294,8 @@
     </header>
 
     <main class="mdl-layout__content mdl-color--grey-100">
-      <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid" id="posts" style="flex:content;flex-direction: row; display: inline-flex">
+      <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid" id="posts"
+        style="flex:content;flex-direction: row; display: inline-flex">
         <div class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--3-col mdl-cell--3-col-tablet mdl-cell--3-col-desktop"
           style="height: 400px">
           <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
@@ -257,7 +304,8 @@
           <div class="mdl-card__supporting-text mdl-color-text--grey-600">
             <!-- Button that handles sign-in/sign-out -->
             <div>
-              <button style="background:lightblue" class="mdl-button mdl-js-button mdl-button--raised" id="quickstart-sign-in">Sign
+              <button style="background:lightblue" class="mdl-button mdl-js-button mdl-button--raised"
+                id="quickstart-sign-in">Sign
                 in with
                 Google</button>
             </div>
@@ -274,7 +322,8 @@
               <label class="mdl-textfield__label" for="Pphoto">Link of Photo</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-              <button id="PostButton" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" onclick="AddPost();">
+              <button id="PostButton" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
+                onclick="AddPost();">
                 Submit
               </button>
             </div>
